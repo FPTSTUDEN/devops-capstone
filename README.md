@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9](https://img.shields.io/badge/Python-3.9-green.svg)](https://shields.io/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Deployed-blue?logo=kubernetes)](https://kubernetes.io/)
 
 A fully functional **RESTful Account Microservice** built with Flask and PostgreSQL, containerized with Docker, and deployed to Kubernetes. This project is the capstone of the IBM DevOps and Software Engineering Professional Certificate.
 
