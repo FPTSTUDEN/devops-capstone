@@ -1,0 +1,118 @@
+## How to Run the Project
+
+### 1. Prerequisites
+- macOS (or Linux) with Docker Desktop installed.
+- Python 3.9 (the repo already provides a `Makefile` to create a virtual environment).
+- `kind` (Kubernetes in Docker) if you want to run the service inside Kubernetes.
+- `kubectl` CLI.
+
+### 2. Run Locally (Python)
+```bash
+# Clone the repo (if not already)
+git clone https://github.com/FPTSTUDEN/devops-capstone.git
+cd devops-capstone
+
+# Set up Python 3.9 virtual environment (the Makefile does this for you)
+make install   # installs dependencies from requirements.txt
+
+# Start PostgreSQL Docker container (the Makefile wraps this)
+make db        # runs a Postgres container on port 5432
+
+# Launch the Flask app (Gunicorn) on port 5005
+PORT=5005 make run
+```
+Open your browser or `curl`:
+```
+curl http://localhost:5005/
+```
+You should see:
+```json
+{ "name": "Account REST API Service", "version": "1.0" }
+```
+All CRUD endpoints are available under `/accounts`.
+
+### 3. Run Inside Kubernetes (Kind)
+```bash
+# Create a Kind cluster (if you don't have one already)
+make cluster          # creates a local Kind cluster named mlops-local
+
+# Build the Docker image
+make build            # creates the image `accounts:1.0`
+
+# Load the image into the Kind nodes
+kind load docker-image accounts:1.0 --name mlops-local
+
+# Deploy the manifests (PostgreSQL + the account service)
+kubectl apply -f deploy/
+
+# Verify the pods are running
+kubectl get pods -w
+```
+#### Port‑forward to access the service from your host:
+```bash
+kubectl port-forward svc/account-service 8085:8080 &
+# now you can call the API on http://localhost:8085
+curl http://localhost:8085/
+```
+You will get the same JSON response as the local run.
+
+### 4. API Quick Test Commands
+```bash
+# Health check
+curl http://localhost:8085/health
+
+# Create an account
+curl -X POST http://localhost:8085/accounts \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com","address":"123 Main St","phone_number":"555-1234"}'
+
+# List accounts
+curl http://localhost:8085/accounts
+
+# Get a single account (replace <id> with a real id)
+curl http://localhost:8085/accounts/<id>
+
+# Update an account
+curl -X PUT http://localhost:8085/accounts/<id> \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Updated","email":"john.updated@example.com","address":"999 New Rd","phone_number":"555-9999"}'
+
+# Delete an account
+curl -X DELETE http://localhost:8085/accounts/<id>
+```
+All endpoints return proper HTTP status codes (201 for create, 200 for read/update, 204 for delete, 404 when not found, etc.).
+
+### 5. What Was Added / Changed
+- Implemented full CRUD endpoints in `service/routes.py`.
+- Added `Dockerfile` to containerize the Flask app.
+- Added Kubernetes manifests:
+  * `deploy/postgresql.yaml` – PostgreSQL Deployment & Service.
+  * `deploy/deployment.yaml` – Account service Deployment.
+  * `deploy/service.yaml` – NodePort Service exposing the app.
+- Fixed `Makefile` DB command to set `PGDATA` for newer Postgres images.
+- Updated `requirements.txt` to use `psycopg2-binary>=2.9.9` (compatible with Apple Silicon and Python 3.9).
+- Rewrote `README.md` to include a detailed description, usage, and API docs.
+- Added this `RUNNING_INSTRUCTIONS.txt` file to give a concise, beginner‑friendly how‑to.
+
+### 6. Git Workflow for the PR
+1. **Create a branch** (already done):
+   ```bash
+   git checkout -b feature/complete-crud-and-kubernetes-deployment
+   ```
+2. **Stage the changes**:
+   ```bash
+   git add README.md service/routes.py Dockerfile deploy/ requirements.txt RUNNING_INSTRUCTIONS.txt Makefile
+   ```
+3. **Commit**:
+   ```bash
+   git commit -m "Complete CRUD implementation & add Kubernetes deployment docs"
+   ```
+4. **Push** to your fork:
+   ```bash
+   git push origin feature/complete-crud-and-kubernetes-deployment
+   ```
+5. **Open a Pull Request** on GitHub targeting the upstream `main` branch.
+
+---
+
+Feel free to edit this file or move it anywhere you like – it’s just a quick reference for anyone (from beginner to expert) who wants to run the service.

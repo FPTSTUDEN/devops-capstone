@@ -1,133 +1,320 @@
-# DevOps Capstone Template
+# DevOps Capstone — Account Microservice
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9](https://img.shields.io/badge/Python-3.9-green.svg)](https://shields.io/)
 
-This repository contains the starter code for the project in [**IBM-CD0285EN-SkillsNetwork DevOps Capstone Project**](https://www.coursera.org/learn/devops-capstone-project?specialization=devops-and-software-engineering) which is part of the [**IBM DevOps and Software Engineering Professional Certificate**](https://www.coursera.org/professional-certificates/devops-and-software-engineering)
+A fully functional **RESTful Account Microservice** built with Flask and PostgreSQL, containerized with Docker, and deployed to Kubernetes. This project is the capstone of the IBM DevOps and Software Engineering Professional Certificate.
 
-## Usage
+---
 
-You should use this template to start your DevOps Capstone project. It contains all of the code that you will need to get started.
+## 📋 Table of Contents
 
-Do Not fork this code! It is meant to be used by pressing the  <span style=color:white;background:green>**Use this Template**</span> button in GitHub. This will copy the code to your own repository with no connection back to the original repository like a fork would. This is what you want.
+- [What Was Implemented](#-what-was-implemented)
+- [Project Structure](#-project-structure)
+- [API Endpoints](#-api-endpoints)
+- [Prerequisites](#-prerequisites)
+- [Option 1: Run Locally (Python)](#-option-1-run-locally-python)
+- [Option 2: Run with Kubernetes](#-option-2-run-with-kubernetes)
+- [Testing the API](#-testing-the-api)
+- [Changes Made](#-changes-made)
 
-## Development Environment
+---
 
-These labs are designed to be executed in the IBM Developer Skills Network Cloud IDE with OpenShift. Please use the links provided in the Coursera Capstone project to access the lab environment.
+## ✅ What Was Implemented
 
-Once you are in the lab environment, you can initialize it with `bin/setup.sh` by sourcing it. (*Note: DO NOT run this program as a bash script. It sets environment variable and so must be sourced*):
+The original template only had a `POST /accounts` (Create) endpoint. The following were **added** to complete the full CRUD REST API:
 
-```bash
-source bin/setup.sh
+| Feature | Status |
+|---|---|
+| `GET /accounts` — List all accounts | ✅ Implemented |
+| `GET /accounts/<id>` — Read a single account | ✅ Implemented |
+| `PUT /accounts/<id>` — Update an account | ✅ Implemented |
+| `DELETE /accounts/<id>` — Delete an account | ✅ Implemented |
+| `Dockerfile` — Containerize the application | ✅ Added |
+| `deploy/postgresql.yaml` — PostgreSQL on Kubernetes | ✅ Added |
+| `deploy/deployment.yaml` — App deployment on Kubernetes | ✅ Added |
+| `deploy/service.yaml` — Expose app via NodePort | ✅ Added |
+| `Makefile` fix — PostgreSQL 18+ Docker compatibility | ✅ Fixed |
+| `requirements.txt` fix — psycopg2-binary for Python 3.9 | ✅ Fixed |
+
+---
+
+## 📁 Project Structure
+
+```
+devops-capstone/
+├── service/                  ← The Flask microservice package
+│   ├── common/               ← Shared log and error handlers
+│   ├── config.py             ← Flask + SQLAlchemy configuration
+│   ├── models.py             ← Account database model (SQLAlchemy)
+│   └── routes.py             ← All REST API route handlers ← MAIN CHANGES HERE
+│
+├── deploy/                   ← Kubernetes manifest files ← NEW
+│   ├── postgresql.yaml       ← PostgreSQL Deployment + Service
+│   ├── deployment.yaml       ← Account Service Deployment
+│   └── service.yaml          ← NodePort Service to expose the app
+│
+├── tests/                    ← Unit and integration tests
+│   ├── factories.py
+│   ├── test_models.py
+│   └── test_routes.py
+│
+├── Dockerfile                ← Docker image definition ← NEW
+├── Makefile                  ← Dev commands (run, db, build, push)
+├── Procfile                  ← gunicorn startup config
+├── requirements.txt          ← Python dependencies
+└── .flaskenv                 ← Flask environment variables
 ```
 
-This will install Python 3.9, make it the default, modify the bash prompt, create a Python virtual environment and activate it.
+---
 
-After sourcing it you prompt should look like this:
+## 🔌 API Endpoints
 
-```bash
-(venv) theia:project$
+Base URL (local): `http://localhost:5005` or `http://localhost:8085` (Kubernetes)
+
+| Method | Endpoint | Description | Request Body |
+|--------|----------|-------------|--------------|
+| `GET` | `/` | Service info | — |
+| `GET` | `/health` | Health check | — |
+| `GET` | `/accounts` | List all accounts | — |
+| `POST` | `/accounts` | Create a new account | JSON body (see below) |
+| `GET` | `/accounts/<id>` | Get account by ID | — |
+| `PUT` | `/accounts/<id>` | Update an account | JSON body (see below) |
+| `DELETE` | `/accounts/<id>` | Delete an account | — |
+
+### Account JSON Schema
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "address": "123 Main Street",
+  "phone_number": "555-1234"
+}
 ```
 
-## Useful commands
+> `phone_number` is optional. All other fields are required.
 
-Under normal circumstances you should not have to run these commands. They are performed automatically at setup but may be useful when things go wrong:
+---
 
-### Activate the Python 3.9 virtual environment
+## 🛠 Prerequisites
 
-You can activate the Python 3.9 environment with:
+Make sure you have the following installed:
+
+| Tool | Purpose | Install |
+|------|---------|---------|
+| Python 3.9 | Run the service locally | `brew install python@3.9` |
+| Docker Desktop | Run PostgreSQL + build images | [docker.com](https://www.docker.com/products/docker-desktop) |
+| kind | Local Kubernetes cluster | `brew install kind` |
+| kubectl | Kubernetes CLI | `brew install kubectl` |
+
+---
+
+## 🖥 Option 1: Run Locally (Python)
+
+This runs the service directly on your Mac using a Python virtual environment.
+
+### Step 1 — Set up Python 3.9 virtual environment
 
 ```bash
-source ~/venv/bin/activate
+/opt/homebrew/opt/python@3.9/bin/python3.9 -m venv ~/venv39
+source ~/venv39/bin/activate
+pip install -r requirements.txt
 ```
 
-### Installing Python dependencies
-
-These dependencies are installed as part of the setup process but should you need to install them again, first make sure that the Python 3.9 virtual environment is activated and then use the `make install` command:
-
-```bash
-make install
-```
-
-### Starting the Postgres Docker container
-
-The labs use Postgres running in a Docker container. If for some reason the service is not available you can start it with:
+### Step 2 — Start PostgreSQL with Docker
 
 ```bash
 make db
 ```
 
-You can use the `docker ps` command to make sure that postgres is up and running.
+> This starts a PostgreSQL container on port 5432.
 
-## Project layout
+### Step 3 — Run the service
 
-The code for the microservice is contained in the `service` package. All of the test are in the `tests` folder. The code follows the **Model-View-Controller** pattern with all of the database code and business logic in the model (`models.py`), and all of the RESTful routing on the controller (`routes.py`).
-
-```text
-├── service         <- microservice package
-│   ├── common/     <- common log and error handlers
-│   ├── config.py   <- Flask configuration object
-│   ├── models.py   <- code for the persistent model
-│   └── routes.py   <- code for the REST API routes
-├── setup.cfg       <- tools setup config
-└── tests                       <- folder for all of the tests
-    ├── factories.py            <- test factories
-    ├── test_cli_commands.py    <- CLI tests
-    ├── test_models.py          <- model unit tests
-    └── test_routes.py          <- route unit tests
+```bash
+PORT=5005 make run
 ```
 
-## Data Model
+### Step 4 — Access the service
 
-The Account model contains the following fields:
+Open your browser or use curl:
+```
+http://localhost:5005
+```
 
-| Name | Type | Optional |
-|------|------|----------|
-| id | Integer| False |
-| name | String(64) | False |
-| email | String(64) | False |
-| address | String(256) | False |
-| phone_number | String(32) | True |
-| date_joined | Date | False |
+Expected output:
+```json
+{"name": "Account REST API Service", "version": "1.0"}
+```
 
-## Your Task
+---
 
-Complete this microservice by implementing REST API's for `READ`, `UPDATE`, `DELETE`, and `LIST` while maintaining **95%** code coverage. In true **Test Driven Development** fashion, first write tests for the code you "wish you had", and then write the code to make them pass.
+## ☸️ Option 2: Run with Kubernetes
 
-## Local Kubernetes Development
+This runs the service inside a local Kubernetes cluster using **Kind**.
 
-This repo can also be used for local Kubernetes development. It is not advised that you run these commands in the Cloud IDE environment. The purpose of these commands are to simulate the Cloud IDE environment locally on your computer. 
+### Step 1 — Create the Kind cluster (if not already running)
 
-At a minimum, you will need [Docker Desktop](https://www.docker.com/products/docker-desktop) installed on your computer. For the full development environment, you will also need [Visual Studio Code](https://code.visualstudio.com) with the [Remote Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension from the Visual Studio Marketplace. All of these can be installed manually by clicking on the links above or you can use a package manager like **Homebrew** on Mac of **Chocolatey** on Windows.
+```bash
+make cluster
+```
 
-Please only use these commands for working stand-alone on your own computer with the VSCode Remote Container environment provided.
+### Step 2 — Build the Docker image
 
-1. Bring up a local K3D Kubernetes cluster
+```bash
+make build
+```
 
-    ```bash
-    $ make cluster
-    ```
+### Step 3 — Load the image into the cluster
 
-2. Install Tekton
+```bash
+kind load docker-image accounts:1.0 --name mlops-local
+```
 
-    ```bash
-    $ make tekton
-    ```
+### Step 4 — Deploy to Kubernetes
 
-3. Install the ClusterTasks that the Cloud IDE has
+```bash
+kubectl apply -f deploy/
+```
 
-    ```bash
-    $ make clustertasks
-    ```
+This creates:
+- A `postgresql` Deployment + ClusterIP Service
+- An `account-service` Deployment
+- A `NodePort` Service for the account service
 
-You can now perform Tekton development locally, just like in the Cloud IDE lab environment.
+### Step 5 — Verify everything is running
 
-## Author
+```bash
+kubectl get pods
+```
 
-[John Rofrano](https://www.coursera.org/instructor/johnrofrano), Senior Technical Staff Member, DevOps Champion, @ IBM Research, and Instructor @ Coursera
+Expected output:
+```
+NAME                             READY   STATUS    RESTARTS   AGE
+account-service-xxx              1/1     Running   0          30s
+postgresql-xxx                   1/1     Running   0          30s
+```
 
-## License
+### Step 6 — Forward the port to your machine
 
-Licensed under the Apache License. See [LICENSE](LICENSE)
+```bash
+kubectl port-forward svc/account-service 8085:8080
+```
 
-## <h3 align="center"> © IBM Corporation 2022. All rights reserved. <h3/>
+### Step 7 — Access the service
+
+```
+http://localhost:8085
+```
+
+Expected output:
+```json
+{"name": "Account REST API Service", "version": "1.0"}
+```
+
+### To update and redeploy after code changes:
+
+```bash
+make build
+kind load docker-image accounts:1.0 --name mlops-local
+kubectl rollout restart deployment/account-service
+kubectl rollout status deployment/account-service
+```
+
+---
+
+## 🧪 Testing the API
+
+You can test all endpoints using `curl`:
+
+### Create an account
+```bash
+curl -X POST http://localhost:8085/accounts \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com","address":"123 Main St","phone_number":"555-1234"}'
+```
+
+### List all accounts
+```bash
+curl http://localhost:8085/accounts
+```
+
+### Read a specific account
+```bash
+curl http://localhost:8085/accounts/1
+```
+
+### Update an account
+```bash
+curl -X PUT http://localhost:8085/accounts/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Jane Doe","email":"jane@example.com","address":"456 Oak Ave","phone_number":"555-9999"}'
+```
+
+### Delete an account
+```bash
+curl -X DELETE http://localhost:8085/accounts/1
+# Returns: HTTP 204 No Content (success, no body)
+```
+
+### Health check
+```bash
+curl http://localhost:8085/health
+# Returns: {"status": "OK"}
+```
+
+---
+
+## 🔧 Changes Made
+
+### 1. `service/routes.py` — Implemented 4 missing REST endpoints
+
+The original template had placeholder comments. These were replaced with working implementations:
+
+- **`GET /accounts`** — Queries all accounts from the database and returns them as a JSON list
+- **`GET /accounts/<id>`** — Finds an account by ID, returns 404 if not found
+- **`PUT /accounts/<id>`** — Updates an existing account, returns 404 if not found
+- **`DELETE /accounts/<id>`** — Deletes an account if it exists, returns HTTP 204
+
+### 2. `Dockerfile` — New file
+
+Added a `Dockerfile` to containerize the application using `python:3.9-slim` as the base image and `gunicorn` as the WSGI server.
+
+### 3. `deploy/postgresql.yaml` — New file
+
+Kubernetes manifest that runs PostgreSQL inside the cluster with:
+- `PGDATA` environment variable set for Postgres 18+ compatibility
+- ClusterIP service so the app pod can connect to it via `postgresql:5432`
+
+### 4. `deploy/deployment.yaml` — New file
+
+Kubernetes manifest for the Account Service:
+- Uses the `accounts:1.0` Docker image
+- Passes `DATABASE_URI` environment variable pointing to the in-cluster PostgreSQL
+
+### 5. `deploy/service.yaml` — New file
+
+Kubernetes `NodePort` Service that exposes the account service on port 8080 inside the cluster.
+
+### 6. `Makefile` — Fixed `db` target
+
+Added `-e PGDATA=/var/lib/postgresql/data/pgdata` to the `docker run` command. This fixes a crash with the latest `postgres:alpine` image (version 18+) which requires data to be stored in a subdirectory.
+
+### 7. `requirements.txt` — Fixed psycopg2 version
+
+Changed `psycopg2-binary==2.9.3` to `psycopg2-binary>=2.9.9` to support Apple Silicon (M1/M2/M3) Macs and Python 3.9 on modern systems.
+
+---
+
+## 👤 Author
+
+Implemented by **@sathvikvelapaka** as part of the IBM DevOps Capstone Project.
+
+Original template by John Rofrano, IBM Research.
+
+---
+
+## 📄 License
+
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.

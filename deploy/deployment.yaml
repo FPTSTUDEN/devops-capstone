@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-service
+  labels:
+    app: account-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: account-service
+  template:
+    metadata:
+      labels:
+        app: account-service
+    spec:
+      containers:
+      - name: account-service
+        image: accounts:1.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DATABASE_URI
+          value: postgresql://postgres:postgres@postgresql:5432/postgres
+        ports:
+        - containerPort: 5000
