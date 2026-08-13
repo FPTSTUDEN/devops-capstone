@@ -1,4 +1,4 @@
-.PHONY: all help install venv run
+.PHONY: all help install install-windows venv run run-windows
 
 help: ## Display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-\\.]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -43,6 +43,11 @@ install: ## Install Python dependencies
 	$(info Installing dependencies...)
 	python3 -m pip install --upgrade pip wheel
 	pip install -r requirements.txt
+install-windows: ## Install Python dependencies on Windows
+	$(info Installing dependencies on Windows...)
+	python -m pip install --upgrade pip wheel
+	pip install -r requirements.txt
+	pip install waitress
 
 lint: ## Run the linter
 	$(info Running linting...)
@@ -57,6 +62,10 @@ tests: ## Run the unit tests
 run: ## Run the service
 	$(info Starting service...)
 	honcho start
+
+run-windows: ## Run the service on Windows, Procfile.windows will run the following waitress server command: waitress-serve --port=5000 --call 'service:create_app'
+	$(info Starting service on Windows...)
+	honcho start -f Procfile.windows
 
 dbrm: ## Stop and remove PostgreSQL in Docker
 	$(info Stopping and removing PostgreSQL...)
