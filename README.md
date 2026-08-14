@@ -31,9 +31,9 @@ The original template only had a `POST /accounts` (Create) endpoint. The followi
 | `PUT /accounts/<id>` — Update an account | ✅ Implemented |
 | `DELETE /accounts/<id>` — Delete an account | ✅ Implemented |
 | `Dockerfile` — Containerize the application | ✅ Added |
-| `deploy/postgresql.yaml` — PostgreSQL on Kubernetes | ✅ Added |
-| `deploy/deployment.yaml` — App deployment on Kubernetes | ✅ Added |
-| `deploy/service.yaml` — Expose app via NodePort | ✅ Added |
+| `deploy-local/postgresql.yaml` — PostgreSQL on Kubernetes | ✅ Added |
+| `deploy-local/deployment.yaml` — App deployment on Kubernetes | ✅ Added |
+| `deploy-local/service.yaml` — Expose app via NodePort | ✅ Added |
 | `Makefile` fix — PostgreSQL 18+ Docker compatibility | ✅ Fixed |
 | `requirements.txt` fix — psycopg2-binary for Python 3.9 | ✅ Fixed |
 
@@ -49,7 +49,7 @@ devops-capstone/
 │   ├── models.py             ← Account database model (SQLAlchemy)
 │   └── routes.py             ← All REST API route handlers ← MAIN CHANGES HERE
 │
-├── deploy/                   ← Kubernetes manifest files ← NEW
+├── deploy-local/                   ← Kubernetes manifest files ← NEW
 │   ├── postgresql.yaml       ← PostgreSQL Deployment + Service
 │   ├── deployment.yaml       ← Account Service Deployment
 │   └── service.yaml          ← NodePort Service to expose the app
@@ -175,7 +175,7 @@ kind load docker-image accounts:1.0 --name mlops-local
 ### Step 4 — Deploy to Kubernetes
 
 ```bash
-kubectl apply -f deploy/
+kubectl apply -f deploy-local/
 ```
 
 This creates:
@@ -281,19 +281,19 @@ The original template had placeholder comments. These were replaced with working
 
 Added a `Dockerfile` to containerize the application using `python:3.9-slim` as the base image and `gunicorn` as the WSGI server.
 
-### 3. `deploy/postgresql.yaml` — New file
+### 3. `deploy-local/postgresql.yaml` — New file
 
 Kubernetes manifest that runs PostgreSQL inside the cluster with:
 - `PGDATA` environment variable set for Postgres 18+ compatibility
 - ClusterIP service so the app pod can connect to it via `postgresql:5432`
 
-### 4. `deploy/deployment.yaml` — New file
+### 4. `deploy-local/deployment.yaml` — New file
 
 Kubernetes manifest for the Account Service:
 - Uses the `accounts:1.0` Docker image
 - Passes `DATABASE_URI` environment variable pointing to the in-cluster PostgreSQL
 
-### 5. `deploy/service.yaml` — New file
+### 5. `deploy-local/service.yaml` — New file
 
 Kubernetes `NodePort` Service that exposes the account service on port 8080 inside the cluster.
 

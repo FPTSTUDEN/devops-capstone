@@ -43,7 +43,7 @@ make build            # creates the image `accounts:1.0`
 kind load docker-image accounts:1.0 --name mlops-local
 
 # Deploy the manifests (PostgreSQL + the account service)
-kubectl apply -f deploy/
+kubectl apply -f deploy-local/
 
 # Verify the pods are running
 kubectl get pods -w
@@ -86,9 +86,9 @@ All endpoints return proper HTTP status codes (201 for create, 200 for read/upda
 - Implemented full CRUD endpoints in `service/routes.py`.
 - Added `Dockerfile` to containerize the Flask app.
 - Added Kubernetes manifests:
-  * `deploy/postgresql.yaml` – PostgreSQL Deployment & Service.
-  * `deploy/deployment.yaml` – Account service Deployment.
-  * `deploy/service.yaml` – NodePort Service exposing the app.
+  * `deploy-local/postgresql.yaml` – PostgreSQL Deployment & Service.
+  * `deploy-local/deployment.yaml` – Account service Deployment.
+  * `deploy-local/service.yaml` – NodePort Service exposing the app.
 - Fixed `Makefile` DB command to set `PGDATA` for newer Postgres images.
 - Updated `requirements.txt` to use `psycopg2-binary>=2.9.9` (compatible with Apple Silicon and Python 3.9).
 - Rewrote `README.md` to include a detailed description, usage, and API docs.
@@ -101,7 +101,7 @@ All endpoints return proper HTTP status codes (201 for create, 200 for read/upda
    ```
 2. **Stage the changes**:
    ```bash
-   git add README.md service/routes.py Dockerfile deploy/ requirements.txt RUNNING_INSTRUCTIONS.txt Makefile
+   git add README.md service/routes.py Dockerfile deploy-local/ requirements.txt RUNNING_INSTRUCTIONS.txt Makefile
    ```
 3. **Commit**:
    ```bash
