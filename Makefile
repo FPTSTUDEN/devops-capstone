@@ -77,6 +77,5 @@ db: ## Run PostgreSQL in Docker
 	docker run -d --name postgresql \
 		-p 5432:5432 \
 		-e POSTGRES_PASSWORD=postgres \
-		-e PGDATA=/var/lib/postgresql/data/pgdata \
-		-v postgresql:/var/lib/postgresql/data \
+		-v postgresql:/var/lib/postgresql \
 		postgres:alpine
