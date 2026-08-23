@@ -1,6 +1,4 @@
-Here's the minimally modified README.md with the deployment directories clearly separated:
 
-```markdown
 # DevOps Capstone — Account Microservice
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
