@@ -380,7 +380,7 @@ Changed `psycopg2-binary==2.9.3` to `psycopg2-binary>=2.9.9` to support Apple Si
 
 ## 👤 Author
 
-Implemented by **@sathvikvelapaka** as part of the IBM DevOps Capstone Project.
+Implemented by **mrdinhdinh** and **@sathvikvelapaka** as part of the IBM DevOps Capstone Project.
 
 Original template by John Rofrano, IBM Research.
 
