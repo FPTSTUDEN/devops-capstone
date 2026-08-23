@@ -7,6 +7,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY service/ ./service/
 
+RUN useradd --uid 1000 theia && chown -R theia /app
+USER theia
+
 EXPOSE 5000
 ENV PORT=5000
 
