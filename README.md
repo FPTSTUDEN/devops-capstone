@@ -1,3 +1,6 @@
+Here's the minimally modified README.md with the deployment directories clearly separated:
+
+```markdown
 # DevOps Capstone — Account Microservice
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -15,7 +18,8 @@ A fully functional **RESTful Account Microservice** built with Flask and Postgre
 - [API Endpoints](#-api-endpoints)
 - [Prerequisites](#-prerequisites)
 - [Option 1: Run Locally (Python)](#-option-1-run-locally-python)
-- [Option 2: Run with Kubernetes](#-option-2-run-with-kubernetes)
+- [Option 2: Run with Kubernetes (Kind - Local)](#-option-2-run-with-kubernetes-kind---local)
+- [Option 3: Deploy to OpenShift (IBM Cloud)](#-option-3-deploy-to-openshift-ibm-cloud)
 - [Testing the API](#-testing-the-api)
 - [Changes Made](#-changes-made)
 
@@ -32,9 +36,12 @@ The original template only had a `POST /accounts` (Create) endpoint. The followi
 | `PUT /accounts/<id>` — Update an account | ✅ Implemented |
 | `DELETE /accounts/<id>` — Delete an account | ✅ Implemented |
 | `Dockerfile` — Containerize the application | ✅ Added |
-| `deploy-local/postgresql.yaml` — PostgreSQL on Kubernetes | ✅ Added |
-| `deploy-local/deployment.yaml` — App deployment on Kubernetes | ✅ Added |
+| `deploy-local/postgresql.yaml` — PostgreSQL on Kind | ✅ Added |
+| `deploy-local/deployment.yaml` — App deployment on Kind | ✅ Added |
 | `deploy-local/service.yaml` — Expose app via NodePort | ✅ Added |
+| `deploy/postgresql-ephemeral-template.json` — PostgreSQL on OpenShift | ✅ Added |
+| `deploy/deployment.yaml` — App deployment on OpenShift | ✅ Added |
+| `deploy/service.yaml` — Expose app via OpenShift Service | ✅ Added |
 | `Makefile` fix — PostgreSQL 18+ Docker compatibility | ✅ Fixed |
 | `requirements.txt` fix — psycopg2-binary for Python 3.9 | ✅ Fixed |
 
@@ -50,7 +57,12 @@ devops-capstone/
 │   ├── models.py             ← Account database model (SQLAlchemy)
 │   └── routes.py             ← All REST API route handlers ← MAIN CHANGES HERE
 │
-├── deploy-local/                   ← Kubernetes manifest files ← NEW
+├── deploy/                   ← OpenShift (IBM Cloud) manifests ← ORIGINAL
+│   ├── postgresql-ephemeral-template.json
+│   ├── deployment.yaml
+│   └── service.yaml
+│
+├── deploy-local/             ← Kind (Local) manifests ← NEW
 │   ├── postgresql.yaml       ← PostgreSQL Deployment + Service
 │   ├── deployment.yaml       ← Account Service Deployment
 │   └── service.yaml          ← NodePort Service to expose the app
@@ -108,6 +120,7 @@ Make sure you have the following installed:
 | Docker Desktop | Run PostgreSQL + build images | [docker.com](https://www.docker.com/products/docker-desktop) |
 | kind | Local Kubernetes cluster | `brew install kind` |
 | kubectl | Kubernetes CLI | `brew install kubectl` |
+| oc | OpenShift CLI (for Option 3) | [OpenShift CLI](https://docs.openshift.com/container-platform/4.12/cli_reference/openshift_cli/getting-started-cli.html) |
 
 ---
 
@@ -151,7 +164,7 @@ Expected output:
 
 ---
 
-## ☸️ Option 2: Run with Kubernetes
+## ☸️ Option 2: Run with Kubernetes (Kind - Local)
 
 This runs the service inside a local Kubernetes cluster using **Kind**.
 
@@ -225,6 +238,56 @@ kubectl rollout status deployment/account-service
 
 ---
 
+## ☁️ Option 3: Deploy to OpenShift (IBM Cloud)
+
+This deploys the service to OpenShift on IBM Cloud using the original lab instructions.
+
+### Step 1 — Ensure you're logged into OpenShift
+
+```bash
+oc login <your-openshift-cluster-url>
+```
+
+### Step 2 — Deploy PostgreSQL using the ephemeral template
+
+```bash
+oc create -f deploy/postgresql-ephemeral-template.json
+oc new-app postgresql-ephemeral
+```
+
+### Step 3 — Deploy the account service
+
+```bash
+oc create -f deploy/deployment.yaml
+oc create -f deploy/service.yaml
+```
+
+### Step 4 — Expose the service via a route
+
+```bash
+oc expose service accounts --name=accounts --edge-termination
+```
+
+### Step 5 — Get the route URL
+
+```bash
+oc get routes
+```
+
+### Step 6 — Access the service
+
+Open the route URL in your browser or use curl:
+```bash
+curl <route-url>
+```
+
+Expected output:
+```json
+{"name": "Account REST API Service", "version": "1.0"}
+```
+
+---
+
 ## 🧪 Testing the API
 
 You can test all endpoints using `curl`:
@@ -284,25 +347,32 @@ Added a `Dockerfile` to containerize the application using `python:3.9-slim` as 
 
 ### 3. `deploy-local/postgresql.yaml` — New file
 
-Kubernetes manifest that runs PostgreSQL inside the cluster with:
+Kubernetes manifest that runs PostgreSQL inside the Kind cluster with:
 - `PGDATA` environment variable set for Postgres 18+ compatibility
 - ClusterIP service so the app pod can connect to it via `postgresql:5432`
 
 ### 4. `deploy-local/deployment.yaml` — New file
 
-Kubernetes manifest for the Account Service:
+Kubernetes manifest for the Account Service on Kind:
 - Uses the `accounts:1.0` Docker image
 - Passes `DATABASE_URI` environment variable pointing to the in-cluster PostgreSQL
 
 ### 5. `deploy-local/service.yaml` — New file
 
-Kubernetes `NodePort` Service that exposes the account service on port 8080 inside the cluster.
+Kubernetes `NodePort` Service that exposes the account service on port 8080 inside the Kind cluster.
 
-### 6. `Makefile` — Fixed `db` target
+### 6. `deploy/` — OpenShift manifests (original)
+
+The `deploy/` directory contains the original OpenShift manifests from the lab:
+- `postgresql-ephemeral-template.json` — OpenShift template for PostgreSQL
+- `deployment.yaml` — Account Service deployment on OpenShift
+- `service.yaml` — OpenShift Service exposing the app
+
+### 7. `Makefile` — Fixed `db` target
 
 Added `-e PGDATA=/var/lib/postgresql/data/pgdata` to the `docker run` command. This fixes a crash with the latest `postgres:alpine` image (version 18+) which requires data to be stored in a subdirectory.
 
-### 7. `requirements.txt` — Fixed psycopg2 version
+### 8. `requirements.txt` — Fixed psycopg2 version
 
 Changed `psycopg2-binary==2.9.3` to `psycopg2-binary>=2.9.9` to support Apple Silicon (M1/M2/M3) Macs and Python 3.9 on modern systems.
 
