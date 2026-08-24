@@ -3,7 +3,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9](https://img.shields.io/badge/Python-3.9-green.svg)](https://shields.io/)
-![Build Status](https://github.com/<OWNER>/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)
+![Build Status](https://github.com/FPTSTUDEN/devops-capstone/actions/workflows/ci-build.yaml/badge.svg)
 
 A fully functional **RESTful Account Microservice** built with Flask and PostgreSQL, containerized with Docker, and deployed to Kubernetes. This project is the capstone of the IBM DevOps and Software Engineering Professional Certificate.
 
@@ -11,7 +11,6 @@ A fully functional **RESTful Account Microservice** built with Flask and Postgre
 
 ## 📋 Table of Contents
 
-- [What Was Implemented](#-what-was-implemented)
 - [Project Structure](#-project-structure)
 - [API Endpoints](#-api-endpoints)
 - [Prerequisites](#-prerequisites)
@@ -20,28 +19,6 @@ A fully functional **RESTful Account Microservice** built with Flask and Postgre
 - [Option 3: Deploy to OpenShift (IBM Cloud)](#-option-3-deploy-to-openshift-ibm-cloud)
 - [Testing the API](#-testing-the-api)
 - [Changes Made](#-changes-made)
-
----
-
-## ✅ What Was Implemented
-
-The original template only had a `POST /accounts` (Create) endpoint. The following were **added** to complete the full CRUD REST API:
-
-| Feature | Status |
-|---|---|
-| `GET /accounts` — List all accounts | ✅ Implemented |
-| `GET /accounts/<id>` — Read a single account | ✅ Implemented |
-| `PUT /accounts/<id>` — Update an account | ✅ Implemented |
-| `DELETE /accounts/<id>` — Delete an account | ✅ Implemented |
-| `Dockerfile` — Containerize the application | ✅ Added |
-| `deploy-local/postgresql.yaml` — PostgreSQL on Kind | ✅ Added |
-| `deploy-local/deployment.yaml` — App deployment on Kind | ✅ Added |
-| `deploy-local/service.yaml` — Expose app via NodePort | ✅ Added |
-| `deploy/postgresql-ephemeral-template.json` — PostgreSQL on OpenShift | ✅ Added |
-| `deploy/deployment.yaml` — App deployment on OpenShift | ✅ Added |
-| `deploy/service.yaml` — Expose app via OpenShift Service | ✅ Added |
-| `Makefile` fix — PostgreSQL 18+ Docker compatibility | ✅ Fixed |
-| `requirements.txt` fix — psycopg2-binary for Python 3.9 | ✅ Fixed |
 
 ---
 
@@ -325,54 +302,6 @@ curl -X DELETE http://localhost:8085/accounts/1
 curl http://localhost:8085/health
 # Returns: {"status": "OK"}
 ```
-
----
-
-## 🔧 Changes Made
-
-### 1. `service/routes.py` — Implemented 4 missing REST endpoints
-
-The original template had placeholder comments. These were replaced with working implementations:
-
-- **`GET /accounts`** — Queries all accounts from the database and returns them as a JSON list
-- **`GET /accounts/<id>`** — Finds an account by ID, returns 404 if not found
-- **`PUT /accounts/<id>`** — Updates an existing account, returns 404 if not found
-- **`DELETE /accounts/<id>`** — Deletes an account if it exists, returns HTTP 204
-
-### 2. `Dockerfile` — New file
-
-Added a `Dockerfile` to containerize the application using `python:3.9-slim` as the base image and `gunicorn` as the WSGI server.
-
-### 3. `deploy-local/postgresql.yaml` — New file
-
-Kubernetes manifest that runs PostgreSQL inside the Kind cluster with:
-- `PGDATA` environment variable set for Postgres 18+ compatibility
-- ClusterIP service so the app pod can connect to it via `postgresql:5432`
-
-### 4. `deploy-local/deployment.yaml` — New file
-
-Kubernetes manifest for the Account Service on Kind:
-- Uses the `accounts:1.0` Docker image
-- Passes `DATABASE_URI` environment variable pointing to the in-cluster PostgreSQL
-
-### 5. `deploy-local/service.yaml` — New file
-
-Kubernetes `NodePort` Service that exposes the account service on port 8080 inside the Kind cluster.
-
-### 6. `deploy/` — OpenShift manifests (original)
-
-The `deploy/` directory contains the original OpenShift manifests from the lab:
-- `postgresql-ephemeral-template.json` — OpenShift template for PostgreSQL
-- `deployment.yaml` — Account Service deployment on OpenShift
-- `service.yaml` — OpenShift Service exposing the app
-
-### 7. `Makefile` — Fixed `db` target
-
-Added `-e PGDATA=/var/lib/postgresql/data/pgdata` to the `docker run` command. This fixes a crash with the latest `postgres:alpine` image (version 18+) which requires data to be stored in a subdirectory.
-
-### 8. `requirements.txt` — Fixed psycopg2 version
-
-Changed `psycopg2-binary==2.9.3` to `psycopg2-binary>=2.9.9` to support Apple Silicon (M1/M2/M3) Macs and Python 3.9 on modern systems.
 
 ---
 
