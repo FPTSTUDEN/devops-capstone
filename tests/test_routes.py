@@ -35,7 +35,7 @@ class TestAccountService(TestCase):
         app.config["DEBUG"] = False
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
-        talisman.https_force = False  # Disable HTTPS for testing
+        talisman.force_https = False  # Disable HTTPS for testing
         init_db(app)
 
     @classmethod
